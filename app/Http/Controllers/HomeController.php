@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Producto;
+use App\Models\Historial;
 
 class HomeController extends Controller
 {
@@ -18,7 +19,10 @@ class HomeController extends Controller
 
 
     public function index(){
-        $allprod = Producto::where('dueño', auth()->user()->email)->simplePaginate(3);
+        $allprod = Producto::where('dueño', auth()->user()->email)
+                    ->where('activo', 'si')
+                    ->simplePaginate(3);
+
         return view('home', compact('allprod'));
     }
 
@@ -43,6 +47,7 @@ class HomeController extends Controller
             $imagen = "default.png";
         }
 
+        # Creacion de registro en Producto
         $newproducto = new Producto;
 
         $newproducto->nombre = $request->name;
@@ -50,8 +55,23 @@ class HomeController extends Controller
         $newproducto->dueño = auth()->user()->email;
         $newproducto->precio = $request->precio;
         $newproducto->ruta = $imagen;
+        $newproducto->activo = 'si';
 
         $newproducto->save();
+
+        # Creacion de registro en Historial
+        $newhist = new Historial;
+        $idprod = Producto::where('dueño', auth()->user()->email)
+                            ->get()
+                            ->last();
+
+        $newhist->id_producto = strval($idprod->id);
+        $newhist->producto = $request->name;
+        $newhist->dueño = auth()->user()->email;
+        $newhist->precio = $request->precio;
+        $newhist->accion = 'Se creo el producto';
+
+        $newhist->save();
 
         return back()->with('successcreate', 'El producto ha sido agregada con exito!');
     }
@@ -63,6 +83,7 @@ class HomeController extends Controller
 
     public function updateProducto(Request $request, $id){
         $prod = Producto::findOrFail($id);
+        $idp = $prod->id;
         $prod->nombre = $request->name;
         $prod->descripcion = $request->descripcion;
         $prod->precio = $request->precio;
@@ -78,13 +99,46 @@ class HomeController extends Controller
         }
 
         $prod->save();
+
+        #Update historial
+        $newhist = new Historial;
+
+        $newhist->id_producto = strval($idp);
+        $newhist->producto = $request->name;
+        $newhist->dueño = auth()->user()->email;
+        $newhist->precio = $request->precio;
+        $newhist->accion = 'Se modifico el producto';
+
+        $newhist->save();
         return back()->with('successedit', 'El producto ha sido editado con exito!');
     }
 
     public function eliminarProducto($producto){
         $miproducto = Producto::findOrFail($producto);
-        $miproducto->delete();
+        #$miproducto->delete();
+        $miproducto->activo = 'no';
+        $miproducto->save();
+
+        #Update historial
+        $newhist = new Historial;
+
+        $newhist->id_producto = strval($miproducto->id);
+        $newhist->producto = $miproducto->nombre;
+        $newhist->dueño = auth()->user()->email;
+        $newhist->precio = $miproducto->precio;
+        $newhist->accion = 'Se elimino el producto';
+
+        $newhist->save();
 
         return back()->with('successdelete', 'El producto ha sido eliminado con exito!');
+    }
+
+    public function historial(){
+        $products = Historial::where('dueño', auth()->user()->email)->simplePaginate(4);
+        if(auth()->user()->id == 1){
+            $products = Historial::groupBy('id', 'id_producto', 'producto', 'dueño', 'precio', 'accion', 'created_at', 'updated_at')
+                        ->simplePaginate(6);
+        }
+        return view('historial', compact('products'));
     }
 }

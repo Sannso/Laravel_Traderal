@@ -25,6 +25,7 @@ Route::post('/producto/agregar/creando', 'App\Http\Controllers\HomeController@cr
 Route::get('/home/editar/{id}', 'App\Http\Controllers\HomeController@editarProducto')->name('editarProducto');
 Route::post('/home/editar/{id}', 'App\Http\Controllers\HomeController@updateProducto')->name('updateProducto');
 
+Route::get('/home/historial', 'App\Http\Controllers\HomeController@historial')->name('historial');
 
 Auth::routes();
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');

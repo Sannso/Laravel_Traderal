@@ -71,6 +71,11 @@
                                         </a>
                                     @endif
 
+                                    <!-- Historial -->
+                                    <a class="dropdown-item" href="{{ route('historial') }}">
+                                        {{ __('Historial') }}
+                                    </a>
+
                                     <!-- Logout -->
                                     <a class="dropdown-item" href="{{ route('logout') }}"
                                        onclick="event.preventDefault();

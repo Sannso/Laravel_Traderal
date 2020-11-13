@@ -8,12 +8,9 @@ use App\Models\Producto;
 class AdminController extends Controller
 {
 
-    private $isadmin = False;
-    
     public function __construct(){
         $this->middleware('auth');
-
-        
+    
     }
 
 
